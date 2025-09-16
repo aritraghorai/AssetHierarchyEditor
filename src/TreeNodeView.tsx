@@ -197,7 +197,7 @@ const EntityTree: React.FC<EntityTreeProps> = ({
           </div>
         </div>
 
-        <div className="p-4 max-h-96 overflow-y-auto custom-scrollbar">
+        <div className="p-4 max-h-full overflow-y-auto custom-scrollbar">
           {roots.length > 0 ? (
             <div className="space-y-1">
               {roots.map((node) => (
