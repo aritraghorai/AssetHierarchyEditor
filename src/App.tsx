@@ -121,7 +121,7 @@ const AssetHierarchyManager = () => {
         node.entityType.type,
         node.source,
         node.Attributes,
-        node.action,
+        excelType,
       ]);
     }
 
