@@ -1,5 +1,5 @@
 import type { TreeNode } from "./types/Tree";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -9,7 +9,9 @@ import {
   FileText,
   MoreHorizontal,
   Box,
-  AlertTriangle
+  AlertTriangle,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import EditModal from "./EditModal";
 
@@ -19,11 +21,25 @@ const TreeNodeView: React.FC<{
   onDelete?: (node: TreeNode) => void;
   sheetType: string;
   level?: number;
-}> = ({ node, onEdit, onDelete, sheetType, level = 0 }) => {
+  expandAllSignal?: number;
+  collapseAllSignal?: number;
+}> = ({ node, onEdit, onDelete, sheetType, level = 0, expandAllSignal, collapseAllSignal }) => {
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const hasChildren = node.children.length > 0;
   const hasLinks = node.links.length > 0;
+
+  useEffect(() => {
+    if (expandAllSignal && expandAllSignal > 0) {
+      setExpanded(true);
+    }
+  }, [expandAllSignal]);
+
+  useEffect(() => {
+    if (collapseAllSignal && collapseAllSignal > 0) {
+      setExpanded(false);
+    }
+  }, [collapseAllSignal]);
 
   const getActionColor = (action: string) => {
     return action === "INSERT"
@@ -145,6 +161,8 @@ const TreeNodeView: React.FC<{
               onEdit={onEdit}
               onDelete={onDelete}
               level={level + 1}
+              expandAllSignal={expandAllSignal}
+              collapseAllSignal={collapseAllSignal}
             />
           ))}
         </div>
@@ -168,6 +186,8 @@ const EntityTree: React.FC<EntityTreeProps> = ({
   sheetType,
 }) => {
   const [editingNode, setEditingNode] = useState<TreeNode | null>(null);
+  const [expandAllSignal, setExpandAllSignal] = useState(0);
+  const [collapseAllSignal, setCollapseAllSignal] = useState(0);
 
   const roots = Array.from(entities.values()).filter((node) => {
     const isChild = Array.from(entities.values()).some((other) =>
@@ -205,6 +225,23 @@ const EntityTree: React.FC<EntityTreeProps> = ({
               </p>
             </div>
             <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => setExpandAllSignal(prev => prev + 1)}
+                className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-xs font-medium"
+                title="Expand All"
+              >
+                <Maximize2 size={16} />
+                <span className="hidden sm:inline">Expand All</span>
+              </button>
+              <button 
+                onClick={() => setCollapseAllSignal(prev => prev + 1)}
+                className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-xs font-medium"
+                title="Collapse All"
+              >
+                <Minimize2 size={16} />
+                <span className="hidden sm:inline">Collapse All</span>
+              </button>
+              <div className="w-px h-6 bg-white/10 mx-1" />
               <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
                 <MoreHorizontal size={20} />
               </button>
@@ -222,6 +259,8 @@ const EntityTree: React.FC<EntityTreeProps> = ({
                   node={node}
                   onEdit={handleEdit}
                   onDelete={onDeleteNode}
+                  expandAllSignal={expandAllSignal}
+                  collapseAllSignal={collapseAllSignal}
                 />
               ))}
             </div>
