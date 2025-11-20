@@ -7,6 +7,9 @@ import {
   Edit3,
   Trash2,
   FileText,
+  MoreHorizontal,
+  Box,
+  AlertTriangle
 } from "lucide-react";
 import EditModal from "./EditModal";
 
@@ -15,7 +18,8 @@ const TreeNodeView: React.FC<{
   onEdit?: (node: TreeNode) => void;
   onDelete?: (node: TreeNode) => void;
   sheetType: string;
-}> = ({ node, onEdit, onDelete, sheetType }) => {
+  level?: number;
+}> = ({ node, onEdit, onDelete, sheetType, level = 0 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const hasChildren = node.children.length > 0;
@@ -28,14 +32,15 @@ const TreeNodeView: React.FC<{
   };
 
   return (
-    <div className="group">
+    <div className="group select-none">
       <div
         className={`
           flex items-center justify-between rounded-lg px-3 py-2 mb-1
           transition-all duration-200 ease-in-out
-          hover:bg-gray-800/50 border border-transparent
-          ${showActions ? "bg-gray-800/30 border-gray-700/50" : ""}
+          hover:bg-white/5 border border-transparent
+          ${showActions ? "bg-white/5 border-white/5" : ""}
         `}
+        style={{ marginLeft: `${level * 12}px` }}
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => setShowActions(false)}
       >
@@ -45,34 +50,41 @@ const TreeNodeView: React.FC<{
               flex-shrink-0 p-1 rounded transition-colors
               ${
                 hasChildren
-                  ? "hover:bg-gray-700 cursor-pointer text-gray-400 hover:text-gray-200"
-                  : "cursor-default"
+                  ? "hover:bg-white/10 cursor-pointer text-gray-400 hover:text-gray-200"
+                  : "cursor-default opacity-0"
               }
             `}
             onClick={() => hasChildren && setExpanded(!expanded)}
+            disabled={!hasChildren}
           >
-            {hasChildren ? (
-              expanded ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronRight size={16} />
-              )
-            ) : (
-              <FileText size={14} className="text-gray-500" />
+            {hasChildren && (
+              expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
             )}
           </button>
 
-          <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <span className="font-medium text-gray-100 truncate">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className={`p-1.5 rounded-md ${hasChildren ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-700/50 text-gray-400'}`}>
+              <Box size={14} />
+            </div>
+            
+            <span className="font-medium text-gray-200 truncate text-sm flex items-center gap-2">
               {node.name}
+              {!node.isValidJson() && (
+                <div className="group/tooltip relative">
+                  <AlertTriangle size={14} className="text-yellow-500" />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-900 text-xs text-white rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 z-50">
+                    Invalid JSON Attributes
+                  </div>
+                </div>
+              )}
             </span>
 
-            <span className="px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 flex-shrink-0">
+            <span className="px-2 py-0.5 text-[10px] font-medium bg-white/5 text-gray-400 rounded border border-white/10 flex-shrink-0 uppercase tracking-wider">
               {node.entityType.type}
             </span>
 
             <span
-              className={`px-2 py-1 text-xs font-medium rounded-full border flex-shrink-0 ${getActionColor(
+              className={`px-2 py-0.5 text-[10px] font-medium rounded border flex-shrink-0 uppercase tracking-wider ${getActionColor(
                 node.action
               )}`}
             >
@@ -83,15 +95,15 @@ const TreeNodeView: React.FC<{
 
         <div className="flex items-center space-x-2 flex-shrink-0">
           {hasLinks && (
-            <div className="flex items-center space-x-1">
-              <Link2 size={14} className="text-blue-400" />
-              <span className="text-xs text-gray-400">{node.links.length}</span>
+            <div className="flex items-center space-x-1 px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20">
+              <Link2 size={12} className="text-indigo-400" />
+              <span className="text-xs text-indigo-300 font-medium">{node.links.length}</span>
             </div>
           )}
 
           <div
-            className={`flex items-center space-x-1 transition-opacity duration-200 ${
-              showActions ? "opacity-100" : "opacity-0"
+            className={`flex items-center space-x-1 transition-all duration-200 ${
+              showActions ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
             }`}
           >
             {onEdit && (
@@ -123,7 +135,8 @@ const TreeNodeView: React.FC<{
       </div>
 
       {expanded && hasChildren && (
-        <div className="ml-6 pl-3 border-l border-gray-700/50">
+        <div className="relative">
+          <div className="absolute left-[19px] top-0 bottom-2 w-px bg-white/5" style={{ left: `${(level * 12) + 19}px` }} />
           {node.children.map((child) => (
             <TreeNodeView
               sheetType={sheetType}
@@ -131,6 +144,7 @@ const TreeNodeView: React.FC<{
               node={child}
               onEdit={onEdit}
               onDelete={onDelete}
+              level={level + 1}
             />
           ))}
         </div>
@@ -178,26 +192,27 @@ const EntityTree: React.FC<EntityTreeProps> = ({
 
   return (
     <>
-      <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-gray-100 rounded-xl border border-gray-700/50 shadow-2xl">
-        <div className="px-6 py-4 border-b border-gray-700/50 bg-gray-800/30">
+      <div className="glass-panel rounded-xl h-[calc(100vh-8rem)] flex flex-col">
+        <div className="px-6 py-4 border-b border-white/5 bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-100">
-                Baker Hughes Customer Tenant1
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                Hierarchy Explorer
+                <span className="px-2 py-0.5 rounded text-xs font-normal bg-blue-500/20 text-blue-400 border border-blue-500/20">Beta</span>
               </h3>
               <p className="text-sm text-gray-400 mt-1">
                 {totalNodes} entities • {totalRoots} root nodes
               </p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">
-                Active
-              </span>
+              <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                <MoreHorizontal size={20} />
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="p-4 max-h-full overflow-y-auto custom-scrollbar">
+        <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
           {roots.length > 0 ? (
             <div className="space-y-1">
               {roots.map((node) => (
@@ -211,9 +226,12 @@ const EntityTree: React.FC<EntityTreeProps> = ({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <FileText size={32} className="mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No entities found</p>
+            <div className="h-full flex flex-col items-center justify-center text-gray-500">
+              <div className="p-4 rounded-full bg-white/5 mb-4">
+                <FileText size={32} className="opacity-50" />
+              </div>
+              <p className="text-lg font-medium text-gray-400">No entities found</p>
+              <p className="text-sm mt-2">Import an Excel file to get started</p>
             </div>
           )}
         </div>

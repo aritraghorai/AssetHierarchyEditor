@@ -12,6 +12,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface EditModalProps {
   node: TreeNode | null;
@@ -33,8 +34,16 @@ const EditModal: React.FC<EditModalProps> = ({
   React.useEffect(() => {
     if (node && isOpen) {
       setAttributes(node.Attributes);
-      setError("");
       setCopied(false);
+      // Validate immediately on open
+      try {
+        JSON.parse(node.Attributes);
+        setError("");
+      } catch {
+        const errorMsg = "Invalid JSON format - please check syntax";
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
     }
   }, [node, isOpen]);
 
@@ -48,7 +57,9 @@ const EditModal: React.FC<EditModalProps> = ({
       onSave(node.id, attributes);
       onClose();
     } catch (e) {
-      setError("Invalid JSON format - please check syntax");
+      const errorMsg = "Invalid JSON format - please check syntax";
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -95,7 +106,9 @@ const EditModal: React.FC<EditModalProps> = ({
       setAttributes(formatted);
       setError("");
     } catch (e: any) {
-      setError(`Invalid JSON: ${e.message}`);
+      const errorMsg = `Invalid JSON: ${e.message}`;
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -113,6 +126,7 @@ const EditModal: React.FC<EditModalProps> = ({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
+      toast.error("Failed to copy to clipboard");
     }
   };
 
@@ -128,28 +142,28 @@ const EditModal: React.FC<EditModalProps> = ({
   if (!isOpen || !node) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-700/50 rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="glass-panel rounded-xl shadow-2xl w-full h-full max-w-none max-h-full overflow-auto flex flex-col border border-white/10">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800/50 to-gray-800/30">
+        <div className="px-6 py-4 border-b border-white/5 bg-white/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-500/30">
                 <Code2 size={20} className="text-blue-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-100">
+                <h3 className="text-xl font-bold text-white">
                   Edit Node Attributes
                 </h3>
                 <div className="flex items-center space-x-3 mt-1">
                   <span className="text-sm text-gray-300 font-medium">
                     {node.name}
                   </span>
-                  <span className="px-2 py-1 text-xs bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+                  <span className="px-2 py-0.5 text-xs bg-blue-500/10 text-blue-400 rounded border border-blue-500/20 uppercase tracking-wider">
                     {node.entityType.type}
                   </span>
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded border ${
+                    className={`px-2 py-0.5 text-xs font-medium rounded border uppercase tracking-wider ${
                       node.action === "INSERT"
                         ? "bg-green-500/10 text-green-400 border-green-500/20"
                         : "bg-red-500/10 text-red-400 border-red-500/20"
@@ -162,7 +176,7 @@ const EditModal: React.FC<EditModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-gray-200"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
             >
               <X size={20} />
             </button>
@@ -170,12 +184,12 @@ const EditModal: React.FC<EditModalProps> = ({
         </div>
 
         {/* Toolbar */}
-        <div className="px-6 py-3 border-b border-gray-700/30 bg-gray-800/20">
+        <div className="px-6 py-3 border-b border-white/5 bg-white/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <button
                 onClick={formatJson}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors border border-white/5"
                 title="Format JSON"
               >
                 <Code2 size={14} />
@@ -183,7 +197,7 @@ const EditModal: React.FC<EditModalProps> = ({
               </button>
               <button
                 onClick={resetToOriginal}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors border border-white/5"
                 title="Reset to original"
               >
                 <RotateCcw size={14} />
@@ -191,7 +205,7 @@ const EditModal: React.FC<EditModalProps> = ({
               </button>
               <button
                 onClick={copyToClipboard}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors border border-white/5"
                 title="Copy to clipboard"
               >
                 {copied ? (
@@ -205,21 +219,21 @@ const EditModal: React.FC<EditModalProps> = ({
 
             <div className="flex items-center space-x-4 text-xs text-gray-400">
               <span>
-                Node ID: <code className="text-gray-300">{node.id}</code>
+                Node ID: <code className="text-gray-300 bg-white/5 px-1 py-0.5 rounded">{node.id}</code>
               </span>
               <span>
-                Source: <code className="text-gray-300">{node.source}</code>
+                Source: <code className="text-gray-300 bg-white/5 px-1 py-0.5 rounded">{node.source}</code>
               </span>
             </div>
           </div>
         </div>
 
         {/* Editor Area */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full border-gray-700/30">
+        <div className="flex-1 overflow-auto bg-[#282c34]">
+          <div className="h-full">
             <CodeMirror
               value={attributes}
-              height="500px"
+              height="100%"
               theme={oneDark}
               extensions={[json()]}
               onChange={(value) => {
@@ -241,6 +255,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 fontSize: "14px",
                 fontFamily:
                   "JetBrains Mono, Fira Code, Monaco, Consolas, monospace",
+                height: "100%"
               }}
             />
           </div>
@@ -248,7 +263,7 @@ const EditModal: React.FC<EditModalProps> = ({
 
         {/* Status Bar */}
         {error && (
-          <div className="px-6 py-3 border-t border-red-500/20 bg-red-500/5">
+          <div className="px-6 py-3 border-t border-red-500/20 bg-red-500/10 backdrop-blur-sm absolute bottom-[72px] left-0 right-0">
             <div className="flex items-center space-x-2 text-red-400">
               <AlertCircle size={16} />
               <span className="text-sm font-medium">{error}</span>
@@ -257,7 +272,7 @@ const EditModal: React.FC<EditModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-700/30 bg-gray-800/20">
+        <div className="px-6 py-4 border-t border-white/5 bg-white/5">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-500">
               {attributes.split("\n").length} lines • {attributes.length}{" "}
@@ -266,7 +281,7 @@ const EditModal: React.FC<EditModalProps> = ({
             <div className="flex items-center space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -278,7 +293,7 @@ const EditModal: React.FC<EditModalProps> = ({
                   ${
                     error
                       ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-blue-500/25"
+                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5"
                   }
                 `}
               >

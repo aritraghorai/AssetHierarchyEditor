@@ -39,4 +39,13 @@ export class TreeNode {
   setAttributes(Attributes: string) {
     this.Attributes = Attributes;
   }
+
+  isValidJson(): boolean {
+    try {
+      JSON.parse(this.Attributes);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
